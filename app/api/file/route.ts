@@ -5,6 +5,26 @@ import { ObjectId } from "mongodb";
 import { DOWNLOAD_ROOT } from "../../../lib/config";
 import { getFilesCollection } from "../../../lib/db";
 
+async function cleanupEmptyDirs(filePath: string) {
+  let dir = path.dirname(path.resolve(filePath));
+  const root = path.resolve(DOWNLOAD_ROOT);
+  while (dir.startsWith(root)) {
+    if (dir === root) {
+      break;
+    }
+    try {
+      const entries = await fs.readdir(dir);
+      if (entries.length > 0) {
+        break;
+      }
+      await fs.rmdir(dir);
+      dir = path.dirname(dir);
+    } catch (err) {
+      break;
+    }
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   const body = await req.json();
   const id = String(body.id || "").trim();
@@ -21,10 +41,10 @@ export async function DELETE(req: NextRequest) {
   const filePath = path.join(DOWNLOAD_ROOT, doc.relativePath);
   try {
     await fs.unlink(filePath);
+    await cleanupEmptyDirs(filePath);
   } catch (err) {}
 
   await filesCol.deleteOne({ _id: new ObjectId(id) });
 
   return Response.json({ ok: true });
 }
-
