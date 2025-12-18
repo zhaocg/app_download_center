@@ -45,19 +45,17 @@ export async function GET(req: NextRequest) {
     const stream = fileStream.createReadStream();
 
     const contentType = detectContentType(doc.fileName);
-    
+    const encodedFileName = encodeURIComponent(doc.fileName);
+
     return new Response(stream as any, {
       status: 200,
       headers: {
         "Content-Type": contentType,
         "Content-Length": String(stats.size),
-        "Content-Disposition": `attachment; filename="${encodeURIComponent(
-          doc.fileName
-        )}"`
+        "Content-Disposition": `attachment; filename="${doc.fileName}"; filename*=UTF-8''${encodedFileName}`
       }
     });
   } catch (err) {
     return new Response("文件读取失败", { status: 500 });
   }
 }
-
