@@ -27,35 +27,57 @@ export async function GET(req: NextRequest) {
   const filesCol = await getFilesCollection();
   const doc = await filesCol.findOne({ _id: new ObjectId(id) });
   if (!doc) {
+    console.warn("[download] document not found", { id });
     return new Response("文件不存在", { status: 404 });
   }
 
-  const filePath = path.join(DOWNLOAD_ROOT, doc.relativePath);
-  
-  // Use stat to get file size and verify existence
+  let filePath = "";
   try {
+    filePath = path.join(DOWNLOAD_ROOT, doc.relativePath);
     const stats = await fs.stat(filePath);
     if (!stats.isFile()) {
+      console.warn("[download] path is not a file", { id, filePath });
       return new Response("文件不存在", { status: 404 });
     }
-    
-    // Create a read stream
-    const fileStream = await fs.open(filePath);
-    // @ts-ignore
-    const stream = fileStream.createReadStream();
+
+    const data = await fs.readFile(filePath);
 
     const contentType = detectContentType(doc.fileName);
     const encodedFileName = encodeURIComponent(doc.fileName);
+    const contentDisposition = `attachment; filename*=UTF-8''${encodedFileName}`;
 
-    return new Response(stream as any, {
+    return new Response(data, {
       status: 200,
       headers: {
         "Content-Type": contentType,
         "Content-Length": String(stats.size),
-        "Content-Disposition": `attachment; filename="${doc.fileName}"; filename*=UTF-8''${encodedFileName}`
+        "Content-Disposition": contentDisposition
       }
     });
   } catch (err) {
+    if (err && typeof err === "object" && "code" in err) {
+      const code = (err as any).code;
+      if (code === "ENOENT" || code === "ENOTDIR") {
+        console.warn("[download] file not found on disk", {
+          id,
+          filePath,
+          code
+        });
+        return new Response("文件不存在", { status: 404 });
+      }
+    }
+    console.error("[download] file read failed", {
+      id,
+      filePath,
+      error:
+        err instanceof Error
+          ? {
+              name: err.name,
+              message: err.message,
+              stack: err.stack
+            }
+          : err
+    });
     return new Response("文件读取失败", { status: 500 });
   }
 }

@@ -54,7 +54,7 @@ async function seed() {
     const fileName = `${projectName}_v${version}_b${buildNumber}_${channel}.${ext}`;
     
     // Create directory structure
-    const relativePath = path.join(projectName, version, channel, fileName);
+    const relativePath = path.join(projectName, version, channel, fileName).replace(/\\/g, "/");
     const fullPath = path.join(DOWNLOAD_ROOT as string, relativePath);
     const dir = path.dirname(fullPath);
 

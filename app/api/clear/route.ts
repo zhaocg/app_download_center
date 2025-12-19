@@ -6,7 +6,7 @@ import { DOWNLOAD_ROOT } from "../../../lib/config";
 import { getFilesCollection } from "../../../lib/db";
 import { FileMeta } from "../../../types/file";
 
-type ClearMode = "time" | "project" | "projectVersion";
+type ClearMode = "time" | "project" | "projectVersion" | "emptyDirs";
 
 interface ClearRequestBody {
   mode: ClearMode;
@@ -31,12 +31,15 @@ interface ClearResponseBody {
   deleted: number;
   totalSize: number;
   sample: ClearSampleItem[];
+  dirs?: string[];
 }
+
+const EMPTY_DIR_THRESHOLD_MS = 5 * 60 * 1000;
 
 async function cleanupEmptyDirs(filePath: string) {
   let dir = path.dirname(path.resolve(filePath));
   const root = path.resolve(DOWNLOAD_ROOT);
-  const thresholdMs = 60 * 1000;
+  const thresholdMs = EMPTY_DIR_THRESHOLD_MS;
   while (dir.startsWith(root)) {
     if (dir === root) {
       break;
@@ -59,6 +62,56 @@ async function cleanupEmptyDirs(filePath: string) {
   }
 }
 
+async function findEmptyDirs(rootDir: string): Promise<string[]> {
+  const root = path.resolve(rootDir);
+  const thresholdMs = EMPTY_DIR_THRESHOLD_MS;
+  const result: string[] = [];
+
+  async function walk(dir: string) {
+    let entries: string[];
+    try {
+      entries = await fs.readdir(dir);
+    } catch {
+      return;
+    }
+
+    const subdirs: string[] = [];
+    for (const name of entries) {
+      const full = path.join(dir, name);
+      try {
+        const stat = await fs.stat(full);
+        if (stat.isDirectory()) {
+          subdirs.push(full);
+        }
+      } catch {
+      }
+    }
+
+    for (const sub of subdirs) {
+      await walk(sub);
+    }
+
+    try {
+      const afterEntries = await fs.readdir(dir);
+      if (afterEntries.length > 0) {
+        return;
+      }
+      if (dir === root) {
+        return;
+      }
+      const stats = await fs.stat(dir);
+      const age = Date.now() - stats.mtimeMs;
+      if (age >= thresholdMs) {
+        result.push(dir);
+      }
+    } catch {
+    }
+  }
+
+  await walk(root);
+  return result;
+}
+
 export async function POST(req: NextRequest) {
   let body: ClearRequestBody;
   try {
@@ -68,8 +121,82 @@ export async function POST(req: NextRequest) {
   }
 
   const mode = body.mode;
-  if (mode !== "time" && mode !== "project" && mode !== "projectVersion") {
+  if (
+    mode !== "time" &&
+    mode !== "project" &&
+    mode !== "projectVersion" &&
+    mode !== "emptyDirs"
+  ) {
     return new Response("无效的清理模式", { status: 400 });
+  }
+
+  const dryRun = Boolean(body.dryRun);
+
+  if (mode === "emptyDirs") {
+    const root = DOWNLOAD_ROOT;
+    const dirs = await findEmptyDirs(root);
+    if (!dirs.length) {
+      const emptyResult: ClearResponseBody = {
+        ok: true,
+        matched: 0,
+        deleted: 0,
+        totalSize: 0,
+        sample: [],
+        dirs: []
+      };
+      return Response.json(emptyResult);
+    }
+
+    if (!dryRun) {
+      const rootResolved = path.resolve(root);
+      const sorted = dirs.slice().sort((a, b) => {
+        const da = a.split(path.sep).length;
+        const db = b.split(path.sep).length;
+        return db - da;
+      });
+      let deleted = 0;
+      const deletedDirs: string[] = [];
+      for (const dir of sorted) {
+        const resolved = path.resolve(dir);
+        if (!resolved.startsWith(rootResolved)) {
+          continue;
+        }
+        try {
+          const entries = await fs.readdir(resolved);
+          if (entries.length > 0) {
+            continue;
+          }
+          const stats = await fs.stat(resolved);
+          const age = Date.now() - stats.mtimeMs;
+          if (age < EMPTY_DIR_THRESHOLD_MS) {
+            continue;
+          }
+          await fs.rmdir(resolved);
+          deleted += 1;
+          deletedDirs.push(resolved);
+        } catch {
+        }
+      }
+      const result: ClearResponseBody = {
+        ok: true,
+        matched: dirs.length,
+        deleted,
+        totalSize: 0,
+        sample: [],
+        dirs: deletedDirs
+      };
+      return Response.json(result);
+    }
+
+    const dryResult: ClearResponseBody = {
+      ok: true,
+      matched: dirs.length,
+      deleted: 0,
+      totalSize: 0,
+      sample: [],
+      dirs
+    };
+    return Response.json(dryResult);
   }
 
   const query: Record<string, unknown> = {};
@@ -113,12 +240,12 @@ export async function POST(req: NextRequest) {
       matched: 0,
       deleted: 0,
       totalSize: 0,
-      sample: []
+      sample: [],
+      dirs: []
     };
     return Response.json(emptyResult);
   }
 
-  const dryRun = Boolean(body.dryRun);
   const totalSize = docs.reduce((sum, d) => sum + (d.size || 0), 0);
 
   if (!dryRun) {
@@ -145,7 +272,8 @@ export async function POST(req: NextRequest) {
         channel: d.channel,
         fileName: d.fileName,
         uploadedAt: d.uploadedAt
-      }))
+      })),
+      dirs: []
     };
     return Response.json(result);
   }
@@ -162,7 +290,8 @@ export async function POST(req: NextRequest) {
       channel: d.channel,
       fileName: d.fileName,
       uploadedAt: d.uploadedAt
-    }))
+    })),
+    dirs: []
   };
 
   return Response.json(dryResult);

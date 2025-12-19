@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type ClearMode = "time" | "project" | "projectVersion";
+type ClearMode = "time" | "project" | "projectVersion" | "emptyDirs";
 type DateMode = "fixed" | "daysBefore";
 
 interface ClearResultItem {
@@ -20,6 +20,7 @@ interface ClearResult {
   deleted: number;
   totalSize: number;
   sample: ClearResultItem[];
+  dirs?: string[];
 }
 
 export default function ClearPage() {
@@ -194,6 +195,7 @@ export default function ClearPage() {
               <option value="time">按时间清理</option>
               <option value="project">按项目清理</option>
               <option value="projectVersion">按项目+版本清理</option>
+              <option value="emptyDirs">清空所有空文件夹</option>
             </select>
           </div>
           {(mode === "project" || mode === "projectVersion") && (
@@ -245,62 +247,64 @@ export default function ClearPage() {
               />
             </div>
           )}
-          <div className="flex flex-col gap-1 md:col-span-2">
-            <label className="text-slate-300">
-              上传时间条件{mode !== "time" ? "（可选）" : ""}
-            </label>
-            <div className="flex flex-col gap-2 md:flex-row">
-              <div className="flex items-center gap-2">
-                <input
-                  id="dateModeFixed"
-                  type="radio"
-                  checked={dateMode === "fixed"}
-                  onChange={() => setDateMode("fixed")}
-                  className="h-3 w-3"
-                />
-                <label htmlFor="dateModeFixed" className="text-slate-300">
-                  指定具体时间
-                </label>
+          {mode !== "emptyDirs" && (
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-slate-300">
+                上传时间条件{mode !== "time" ? "（可选）" : ""}
+              </label>
+              <div className="flex flex-col gap-2 md:flex-row">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="dateModeFixed"
+                    type="radio"
+                    checked={dateMode === "fixed"}
+                    onChange={() => setDateMode("fixed")}
+                    className="h-3 w-3"
+                  />
+                  <label htmlFor="dateModeFixed" className="text-slate-300">
+                    指定具体时间
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="dateModeDays"
+                    type="radio"
+                    checked={dateMode === "daysBefore"}
+                    onChange={() => setDateMode("daysBefore")}
+                    className="h-3 w-3"
+                  />
+                  <label htmlFor="dateModeDays" className="text-slate-300">
+                    删除 N 天之前的记录
+                  </label>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="dateModeDays"
-                  type="radio"
-                  checked={dateMode === "daysBefore"}
-                  onChange={() => setDateMode("daysBefore")}
-                  className="h-3 w-3"
-                />
-                <label htmlFor="dateModeDays" className="text-slate-300">
-                  删除 N 天之前的记录
-                </label>
-              </div>
+              {dateMode === "fixed" && (
+                <div className="mt-1">
+                  <input
+                    type="datetime-local"
+                    value={before}
+                    onChange={(e) => setBefore(e.target.value)}
+                    className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                  />
+                </div>
+              )}
+              {dateMode === "daysBefore" && (
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={daysBefore}
+                    onChange={(e) => setDaysBefore(e.target.value)}
+                    className="w-28 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                    placeholder="例如 30"
+                  />
+                  <span className="text-[11px] text-slate-500">
+                    删除当前时间往前推 N 天之前上传的记录
+                  </span>
+                </div>
+              )}
             </div>
-            {dateMode === "fixed" && (
-              <div className="mt-1">
-                <input
-                  type="datetime-local"
-                  value={before}
-                  onChange={(e) => setBefore(e.target.value)}
-                  className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
-                />
-              </div>
-            )}
-            {dateMode === "daysBefore" && (
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  value={daysBefore}
-                  onChange={(e) => setDaysBefore(e.target.value)}
-                  className="w-28 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
-                  placeholder="例如 30"
-                />
-                <span className="text-[11px] text-slate-500">
-                  删除当前时间往前推 N 天之前上传的记录
-                </span>
-              </div>
-            )}
-          </div>
+          )}
           <div className="flex items-center gap-2 md:col-span-2">
             <input
               id="dryRun"
@@ -329,17 +333,17 @@ export default function ClearPage() {
         </form>
       </div>
       {result && (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-          <h2 className="mb-2 text-sm font-semibold text-slate-900">
-            清理结果
-          </h2>
-          <p className="mb-2 text-xs text-slate-700">
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+        <h2 className="mb-2 text-sm font-semibold text-slate-900">
+          清理结果
+        </h2>
+        <p className="mb-2 text-xs text-slate-700">
             匹配到 {result.matched} 条记录，已删除 {result.deleted} 条，涉及空间约{" "}
-            {(result.totalSize / (1024 * 1024)).toFixed(2)} MB。
-          </p>
-          {result.sample.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded border border-slate-200">
-              <table className="min-w-full text-left text-[11px]">
+          {(result.totalSize / (1024 * 1024)).toFixed(2)} MB。
+        </p>
+        {result.sample.length > 0 && (
+          <div className="max-h-64 overflow-y-auto rounded border border-slate-200">
+            <table className="min-w-full text-left text-[11px]">
                 <thead className="bg-slate-100">
                   <tr>
                     <th className="px-2 py-1 text-slate-600">项目</th>
@@ -371,6 +375,20 @@ export default function ClearPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {result.dirs && result.dirs.length > 0 && (
+            <div className="mt-3 max-h-64 overflow-y-auto rounded border border-slate-200">
+              <div className="border-b border-slate-200 bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                {dryRun ? "将要处理的空目录列表" : "已处理的空目录列表"}
+              </div>
+              <ul className="max-h-60 space-y-1 px-2 py-2 text-[11px] text-slate-700">
+                {result.dirs.map((dir) => (
+                  <li key={dir} className="break-all">
+                    {dir}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
