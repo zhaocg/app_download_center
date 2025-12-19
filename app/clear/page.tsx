@@ -166,18 +166,18 @@ export default function ClearPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-lg border border-red-800 bg-red-950/70 p-3 text-xs text-red-100">
-        <p className="font-semibold text-sm mb-1">危险操作：批量清理安装包</p>
+      <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">
+        <p className="mb-1 text-sm font-semibold">危险操作：批量清理安装包</p>
         <p>此页面不会出现在导航中，只能通过手动输入地址访问。</p>
         <p>建议先勾选预览模式确认无误后，再关闭预览执行实际删除。</p>
       </div>
       {message && (
-        <div className="rounded-md border border-amber-500 bg-amber-950 px-3 py-2 text-sm text-amber-100">
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           {message}
         </div>
       )}
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-        <h2 className="mb-3 text-sm font-semibold text-slate-50">
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">
           清理条件
         </h2>
         <form
@@ -185,12 +185,12 @@ export default function ClearPage() {
           onSubmit={handleSubmit}
         >
           <div className="flex flex-col gap-1">
-            <label className="text-slate-300">清理方式</label>
+            <label className="text-slate-800">清理方式</label>
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value as ClearMode)}
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
-              >
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+            >
               <option value="time">按时间清理</option>
               <option value="project">按项目清理</option>
               <option value="projectVersion">按项目+版本清理</option>
@@ -198,22 +198,22 @@ export default function ClearPage() {
           </div>
           {(mode === "project" || mode === "projectVersion") && (
             <div className="flex flex-col gap-1">
-              <label className="text-slate-300">项目名称</label>
+              <label className="text-slate-800">项目名称</label>
               {projectsLoading ? (
-                <div className="text-[11px] text-slate-400">正在加载项目列表...</div>
+                <div className="text-[11px] text-slate-500">正在加载项目列表...</div>
               ) : projectsError ? (
                 <input
                   type="text"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+                  className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                   placeholder="加载失败，请手动输入项目名称"
                 />
               ) : projects.length > 0 ? (
                 <select
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+                  className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                 >
                   <option value="">请选择项目</option>
                   {projects.map((name) => (
@@ -227,7 +227,7 @@ export default function ClearPage() {
                   type="text"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+                  className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                   placeholder="暂无项目数据，请手动输入项目名称"
                 />
               )}
@@ -235,12 +235,12 @@ export default function ClearPage() {
           )}
           {mode === "projectVersion" && (
             <div className="flex flex-col gap-1">
-              <label className="text-slate-300">版本号</label>
+              <label className="text-slate-800">版本号</label>
               <input
                 type="text"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
-                className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                 placeholder="例如 1.0.0"
               />
             </div>
@@ -281,7 +281,7 @@ export default function ClearPage() {
                   type="datetime-local"
                   value={before}
                   onChange={(e) => setBefore(e.target.value)}
-                  className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+                  className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                 />
               </div>
             )}
@@ -292,10 +292,10 @@ export default function ClearPage() {
                   min={1}
                   value={daysBefore}
                   onChange={(e) => setDaysBefore(e.target.value)}
-                  className="w-28 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+                  className="w-28 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                   placeholder="例如 30"
                 />
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-500">
                   删除当前时间往前推 N 天之前上传的记录
                 </span>
               </div>
@@ -307,9 +307,9 @@ export default function ClearPage() {
               type="checkbox"
               checked={dryRun}
               onChange={(e) => setDryRun(e.target.checked)}
-              className="h-3 w-3 rounded border-slate-700 bg-slate-950"
+              className="h-3 w-3 rounded border-slate-300 bg-white"
             />
-            <label htmlFor="dryRun" className="text-slate-300">
+            <label htmlFor="dryRun" className="text-slate-800">
               预览模式（仅统计和展示将被清理的记录，不实际删除）
             </label>
           </div>
@@ -329,42 +329,42 @@ export default function ClearPage() {
         </form>
       </div>
       {result && (
-        <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-          <h2 className="mb-2 text-sm font-semibold text-slate-50">
+        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">
             清理结果
           </h2>
-          <p className="mb-2 text-xs text-slate-300">
+          <p className="mb-2 text-xs text-slate-700">
             匹配到 {result.matched} 条记录，已删除 {result.deleted} 条，涉及空间约{" "}
             {(result.totalSize / (1024 * 1024)).toFixed(2)} MB。
           </p>
           {result.sample.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded border border-slate-800">
+            <div className="max-h-64 overflow-y-auto rounded border border-slate-200">
               <table className="min-w-full text-left text-[11px]">
-                <thead className="bg-slate-900">
+                <thead className="bg-slate-100">
                   <tr>
-                    <th className="px-2 py-1 text-slate-400">项目</th>
-                    <th className="px-2 py-1 text-slate-400">版本</th>
-                    <th className="px-2 py-1 text-slate-400">渠道</th>
-                    <th className="px-2 py-1 text-slate-400">文件名</th>
-                    <th className="px-2 py-1 text-slate-400">上传时间</th>
+                    <th className="px-2 py-1 text-slate-600">项目</th>
+                    <th className="px-2 py-1 text-slate-600">版本</th>
+                    <th className="px-2 py-1 text-slate-600">渠道</th>
+                    <th className="px-2 py-1 text-slate-600">文件名</th>
+                    <th className="px-2 py-1 text-slate-600">上传时间</th>
                   </tr>
                 </thead>
                 <tbody>
                   {result.sample.map((item) => (
-                    <tr key={item.id} className="border-t border-slate-800">
-                      <td className="px-2 py-1 text-slate-200">
+                    <tr key={item.id} className="border-t border-slate-200">
+                      <td className="px-2 py-1 text-slate-800">
                         {item.projectName}
                       </td>
-                      <td className="px-2 py-1 text-slate-200">
+                      <td className="px-2 py-1 text-slate-800">
                         {item.version}
                       </td>
-                      <td className="px-2 py-1 text-slate-200">
+                      <td className="px-2 py-1 text-slate-800">
                         {item.channel}
                       </td>
-                      <td className="px-2 py-1 text-slate-200">
+                      <td className="px-2 py-1 text-slate-800">
                         {item.fileName}
                       </td>
-                      <td className="px-2 py-1 text-slate-400">
+                      <td className="px-2 py-1 text-slate-600">
                         {new Date(item.uploadedAt).toLocaleString()}
                       </td>
                     </tr>

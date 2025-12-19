@@ -8,6 +8,7 @@ import { getFilesCollection } from "../../../lib/db";
 async function cleanupEmptyDirs(filePath: string) {
   let dir = path.dirname(path.resolve(filePath));
   const root = path.resolve(DOWNLOAD_ROOT);
+  const thresholdMs = 60 * 1000;
   while (dir.startsWith(root)) {
     if (dir === root) {
       break;
@@ -15,6 +16,11 @@ async function cleanupEmptyDirs(filePath: string) {
     try {
       const entries = await fs.readdir(dir);
       if (entries.length > 0) {
+        break;
+      }
+      const stats = await fs.stat(dir);
+      const age = Date.now() - stats.mtimeMs;
+      if (age < thresholdMs) {
         break;
       }
       await fs.rmdir(dir);

@@ -91,12 +91,12 @@ export default function UploadPage() {
   return (
     <div className="flex flex-col gap-4">
       {message && (
-        <div className="rounded-md border border-amber-500 bg-amber-950 px-3 py-2 text-sm text-amber-100">
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           {message}
         </div>
       )}
-      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-        <h2 className="mb-3 text-sm font-semibold text-slate-50">
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">
           上传新的安装包
         </h2>
         <form
@@ -104,7 +104,7 @@ export default function UploadPage() {
           onSubmit={handleUploadSubmit}
         >
           <div className="flex flex-col gap-1">
-            <label className="text-slate-300">项目名称 *</label>
+            <label className="text-slate-800">项目名称 *</label>
             <input
               type="text"
               value={upload.projectName}
@@ -114,12 +114,12 @@ export default function UploadPage() {
                   projectName: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
               placeholder="例如 新三国志曹操传"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-300">版本号 *</label>
+            <label className="text-slate-800">版本号 *</label>
             <input
               type="text"
               value={upload.version}
@@ -129,12 +129,12 @@ export default function UploadPage() {
                   version: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
               placeholder="例如 1.0.0"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-300">构建号 *</label>
+            <label className="text-slate-800">构建号 *</label>
             <input
               type="text"
               value={upload.buildNumber}
@@ -144,12 +144,12 @@ export default function UploadPage() {
                   buildNumber: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
               placeholder="CI 构建号"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-300">渠道名 *</label>
+            <label className="text-slate-800">渠道名 *</label>
             <input
               type="text"
               value={upload.channel}
@@ -159,12 +159,12 @@ export default function UploadPage() {
                   channel: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
               placeholder="例如 GooglePlay"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">资源版本</label>
+            <label className="text-slate-700">资源版本</label>
             <input
               type="text"
               value={upload.resVersion}
@@ -174,11 +174,11 @@ export default function UploadPage() {
                   resVersion: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">大区名称</label>
+            <label className="text-slate-700">大区名称</label>
             <input
               type="text"
               value={upload.areaName}
@@ -188,11 +188,11 @@ export default function UploadPage() {
                   areaName: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">分支名</label>
+            <label className="text-slate-700">分支名</label>
             <input
               type="text"
               value={upload.branch}
@@ -202,11 +202,11 @@ export default function UploadPage() {
                   branch: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">资源分支名</label>
+            <label className="text-slate-700">资源分支名</label>
             <input
               type="text"
               value={upload.rbranch}
@@ -216,11 +216,11 @@ export default function UploadPage() {
                   rbranch: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">SDK 类型</label>
+            <label className="text-slate-700">SDK 类型</label>
             <input
               type="text"
               value={upload.sdk}
@@ -230,11 +230,11 @@ export default function UploadPage() {
                   sdk: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">签名类型</label>
+            <label className="text-slate-700">签名类型</label>
             <input
               type="text"
               value={upload.codeSignType}
@@ -244,11 +244,11 @@ export default function UploadPage() {
                   codeSignType: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-slate-500">App ID</label>
+            <label className="text-slate-700">App ID</label>
             <input
               type="text"
               value={upload.appId}
@@ -258,7 +258,7 @@ export default function UploadPage() {
                   appId: e.target.value
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -272,14 +272,14 @@ export default function UploadPage() {
                   harden: e.target.checked ? "true" : ""
                 }))
               }
-              className="rounded border-slate-700 bg-slate-950"
+              className="rounded border-slate-300 bg-white"
             />
-            <label htmlFor="harden" className="text-slate-500">
+            <label htmlFor="harden" className="text-slate-700">
               是否加固
             </label>
           </div>
           <div className="col-span-full flex flex-col gap-1">
-            <label className="text-slate-300">选择文件 *</label>
+            <label className="text-slate-800">选择文件 *</label>
             <input
               type="file"
               onChange={(e) =>
@@ -288,7 +288,7 @@ export default function UploadPage() {
                   file: e.target.files?.[0] || null
                 }))
               }
-              className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
               required
             />
           </div>

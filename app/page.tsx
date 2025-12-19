@@ -248,23 +248,23 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-4">
       {message && (
-        <div className="rounded-md border border-amber-500 bg-amber-950 px-3 py-2 text-sm text-amber-100">
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           {message}
         </div>
       )}
-      <div className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-900/60 p-3">
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700">
             {breadcrumb.map((item, idx) => (
               <div key={idx} className="flex items-center gap-1">
-                {idx > 0 && <span className="text-slate-500">/</span>}
+                {idx > 0 && <span className="text-slate-400">/</span>}
                 <button
                   type="button"
                   disabled={!item.onClick}
                   onClick={item.onClick}
                   className={
                     item.onClick
-                      ? "rounded px-1 py-0.5 hover:bg-slate-800"
+                      ? "rounded px-1 py-0.5 hover:bg-slate-100"
                       : "cursor-default"
                   }
                 >
@@ -273,14 +273,14 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-300">
+          <div className="flex items-center gap-2 text-xs text-slate-700">
             <span>排序:</span>
             <select
               value={sortField}
               onChange={(e) =>
                 setSortField(e.target.value as SortField)
               }
-              className="rounded border border-slate-700 bg-slate-900 px-1.5 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs"
             >
               <option value="uploadedAt">上传时间</option>
               <option value="name">名称</option>
@@ -291,7 +291,7 @@ export default function HomePage() {
               onChange={(e) =>
                 setSortOrder(e.target.value as SortOrder)
               }
-              className="rounded border border-slate-700 bg-slate-900 px-1.5 py-1 text-xs"
+              className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs"
             >
               <option value="desc">降序</option>
               <option value="asc">升序</option>
@@ -303,22 +303,22 @@ export default function HomePage() {
                 setVersion(undefined);
                 setChannel(undefined);
               }}
-              className="rounded border border-slate-700 px-2 py-1 text-xs hover:bg-slate-800"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100"
             >
               返回根目录
             </button>
             <button
               type="button"
               onClick={handleBack}
-              className="rounded border border-slate-700 px-2 py-1 text-xs hover:bg-slate-800"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100"
             >
               返回上一级
             </button>
           </div>
         </div>
-        <div className="overflow-auto rounded-md border border-slate-800">
-          <table className="min-w-full text-left text-xs text-slate-200">
-            <thead className="bg-slate-900/80">
+        <div className="overflow-auto rounded-md border border-slate-200">
+          <table className="min-w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-100">
               <tr>
                 <th className="px-3 py-2 font-medium">名称</th>
                 <th className="px-3 py-2 font-medium">
@@ -338,7 +338,7 @@ export default function HomePage() {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 bg-slate-950/40">
+            <tbody className="divide-y divide-slate-200 bg-white">
               {entries.length === 0 && (
                 <tr>
                   <td
@@ -354,7 +354,7 @@ export default function HomePage() {
                   if (!isFileLevel) return null;
                   const file = entry.file;
                   return (
-                    <tr key={file._id || idx} className="hover:bg-slate-900">
+                    <tr key={file._id || idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 align-middle">
                         <div className="flex flex-col gap-0.5">
                           <span className="break-all text-xs font-medium">
@@ -375,13 +375,13 @@ export default function HomePage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                      <td className="px-3 py-2 align-middle text-xs text-slate-700">
                         {file.projectName}
                       </td>
-                      <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                      <td className="px-3 py-2 align-middle text-xs text-slate-700">
                         {file.version}
                       </td>
-                      <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                      <td className="px-3 py-2 align-middle text-xs text-slate-700">
                         <div className="flex flex-col">
                           <span>
                             {new Date(
@@ -401,28 +401,28 @@ export default function HomePage() {
                           <button
                             type="button"
                             onClick={() => handleDownload(file)}
-                            className="rounded bg-slate-800 px-2 py-1 text-[10px] hover:bg-slate-700"
+                            className="rounded bg-slate-100 px-2 py-1 text-[10px] text-slate-800 hover:bg-slate-200"
                           >
                             下载
                           </button>
                           <button
                             type="button"
                             onClick={() => handleInstall(file)}
-                            className="rounded bg-emerald-600 px-2 py-1 text-[10px] hover:bg-emerald-500"
+                            className="rounded bg-emerald-600 px-2 py-1 text-[10px] text-white hover:bg-emerald-500"
                           >
                             安装
                           </button>
                           <button
                             type="button"
                             onClick={() => handleShare(file)}
-                            className="rounded bg-indigo-600 px-2 py-1 text-[10px] hover:bg-indigo-500"
+                            className="rounded bg-indigo-600 px-2 py-1 text-[10px] text-white hover:bg-indigo-500"
                           >
                             分享
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(file)}
-                            className="rounded bg-rose-700 px-2 py-1 text-[10px] hover:bg-rose-600"
+                            className="rounded bg-rose-600 px-2 py-1 text-[10px] text-white hover:bg-rose-500"
                           >
                             删除
                           </button>
@@ -435,23 +435,23 @@ export default function HomePage() {
                 return (
                   <tr
                     key={`${entry.type}-${entry.name}-${idx}`}
-                    className="cursor-pointer hover:bg-slate-900"
+                    className="cursor-pointer hover:bg-slate-50"
                     onClick={() => handleOpen(entry)}
                   >
-                    <td className="px-3 py-2 align-middle text-xs font-medium text-slate-100">
+                    <td className="px-3 py-2 align-middle text-xs font-medium text-slate-900">
                       {entry.name}
                     </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                    <td className="px-3 py-2 align-middle text-xs text-slate-700">
                       {entry.type === "project"
                         ? "项目"
                         : entry.type === "version"
                         ? "版本"
                         : "渠道"}
                     </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                    <td className="px-3 py-2 align-middle text-xs text-slate-700">
                       {entry.fileCount}
                     </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                    <td className="px-3 py-2 align-middle text-xs text-slate-700">
                       {entry.latestUploadedAt
                         ? new Date(
                             entry.latestUploadedAt
