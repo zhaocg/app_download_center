@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FileMeta, SortField, SortOrder } from "../types/file";
 import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon } from "./components/Icons";
+import { QRCodeIcon, QRCodeModal } from "./components/QRCode";
 
 type Level = "project" | "version" | "channel" | "file";
 
@@ -48,6 +49,7 @@ export default function HomePage() {
   const [sortField, setSortField] = useState<SortField>("uploadedAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [message, setMessage] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
   const breadcrumb = useMemo(() => {
     const items: { label: string; onClick?: () => void }[] = [];
@@ -244,10 +246,35 @@ export default function HomePage() {
     }
   }
 
+  function handleQRCode(file: FileMeta) {
+    if (!file._id) {
+      return;
+    }
+    const origin = window.location.origin;
+    let url = "";
+    
+    if (file.platform === "ios") {
+      // For iOS, generate ITMS link for direct install
+      const manifestUrl = `${origin}/api/ios/manifest?id=${file._id}`;
+      url = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestUrl)}`;
+    } else {
+      // For Android/Other, direct download link
+      url = `${origin}/api/download?id=${file._id}`;
+    }
+    
+    setQrCodeUrl(url);
+  }
+
   const isFileLevel = level === "file";
 
   return (
     <div className="flex flex-col gap-4">
+      <QRCodeModal 
+        url={qrCodeUrl || ""} 
+        isOpen={!!qrCodeUrl} 
+        onClose={() => setQrCodeUrl(null)} 
+        title="扫码安装/下载"
+      />
       {message && (
         <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           {message}
@@ -437,6 +464,14 @@ export default function HomePage() {
                             className="rounded p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
                           >
                             <ShareIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQRCode(file)}
+                            title="二维码"
+                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                          >
+                            <QRCodeIcon className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
