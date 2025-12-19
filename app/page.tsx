@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FileMeta, SortField, SortOrder } from "../types/file";
+import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon } from "./components/Icons";
 
 type Level = "project" | "version" | "channel" | "file";
 
@@ -322,17 +323,17 @@ export default function HomePage() {
               <tr>
                 <th className="px-3 py-2 font-medium">名称</th>
                 {!isFileLevel && (
-                  <th className="px-3 py-2 font-medium">类型</th>
+                  <th className="px-3 py-2 font-medium w-24 whitespace-nowrap">类型</th>
                 )}
                 {!isFileLevel && (
-                  <th className="px-3 py-2 font-medium">数量</th>
+                  <th className="px-3 py-2 font-medium w-24 whitespace-nowrap">数量</th>
                 )}
-                <th className="px-3 py-2 font-medium">最后上传时间</th>
+                <th className="px-3 py-2 font-medium w-48 whitespace-nowrap">最后上传时间</th>
                 {isFileLevel && (
-                  <th className="px-3 py-2 font-medium">大小</th>
+                  <th className="px-3 py-2 font-medium w-24 whitespace-nowrap">大小</th>
                 )}
                 {isFileLevel && (
-                  <th className="px-3 py-2 font-medium">操作</th>
+                  <th className="px-3 py-2 font-medium w-40 whitespace-nowrap">操作</th>
                 )}
               </tr>
             </thead>
@@ -412,34 +413,38 @@ export default function HomePage() {
                         {(file.size / (1024 * 1024)).toFixed(2)} MB
                       </td>
                       <td className="px-3 py-2 align-middle">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => handleDownload(file)}
-                            className="rounded bg-slate-500 px-2 py-1 text-[10px] text-white hover:bg-slate-800"
+                            title="下载"
+                            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
                           >
-                            下载
+                            <DownloadIcon className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleInstall(file)}
-                            className="rounded bg-emerald-600 px-2 py-1 text-[10px] text-white hover:bg-emerald-500"
+                            title="安装"
+                            className="rounded p-1.5 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
                           >
-                            安装
+                            <InstallIcon className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleShare(file)}
-                            className="rounded bg-indigo-600 px-2 py-1 text-[10px] text-white hover:bg-indigo-500"
+                            title="分享"
+                            className="rounded p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
                           >
-                            分享
+                            <ShareIcon className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(file)}
-                            className="rounded bg-rose-600 px-2 py-1 text-[10px] text-white hover:bg-rose-500"
+                            title="删除"
+                            className="rounded p-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
                           >
-                            删除
+                            <TrashIcon className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
@@ -473,7 +478,6 @@ export default function HomePage() {
                           ).toLocaleString()
                         : "-"}
                     </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-300" />
                   </tr>
                 );
               })}

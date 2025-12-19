@@ -60,8 +60,24 @@ export async function POST(req: NextRequest) {
     return new Response("缺少必要的项目信息", { status: 400 });
   }
 
-  const fileName = file.originalFilename;
-  const platform = detectPlatform(fileName);
+  const harden =
+    hardenRaw === "true" || hardenRaw === "1" || hardenRaw === "yes";
+
+  const ext = path.extname(file.originalFilename);
+  let fileName = `${projectName}_${version}(${buildNumber})_${channel}`;
+  
+  if (resVersion) fileName += `_[${resVersion}]`;
+  if (areaName) fileName += `_[${areaName}]`;
+  if (branch) fileName += `_[${branch}]`;
+  if (rbranch) fileName += `_[${rbranch}]`;
+  if (sdk) fileName += `_[${sdk}]`;
+  if (harden) fileName += `_[harden]`;
+  if (codeSignType) fileName += `_[${codeSignType}]`;
+  if (appId) fileName += `_[${appId}]`;
+  
+  fileName += ext;
+
+  const platform = detectPlatform(file.originalFilename);
   if (!platform) {
     try {
       await fs.unlink(file.path);
@@ -95,8 +111,6 @@ export async function POST(req: NextRequest) {
     const size = file.size;
     const uploadedAt = new Date().toISOString();
     const relativePath = path.join(projectName, version, channel, fileName);
-    const harden =
-      hardenRaw === "true" || hardenRaw === "1" || hardenRaw === "yes";
 
     const doc: FileMeta = {
       projectName,
@@ -119,13 +133,29 @@ export async function POST(req: NextRequest) {
     };
 
     const filesCol = await getFilesCollection();
-    const result = await filesCol.insertOne(doc as unknown as any);
+    
+    // Check if file already exists in database
+    const existingFile = await filesCol.findOne({ relativePath });
+    let resultId: string;
+
+    if (existingFile) {
+      // Update existing record
+      await filesCol.updateOne(
+        { _id: existingFile._id },
+        { $set: doc }
+      );
+      resultId = existingFile._id.toString();
+    } else {
+      // Insert new record
+      const result = await filesCol.insertOne(doc as unknown as any);
+      resultId = (result.insertedId as ObjectId).toString();
+    }
 
     return Response.json({
       ok: true,
       file: {
         ...doc,
-        _id: (result.insertedId as ObjectId).toString()
+        _id: resultId
       }
     });
   } catch (err) {

@@ -24,7 +24,7 @@ function streamFile(path: string): ReadableStream {
   
   return new ReadableStream({
     start(controller) {
-      downloadStream.on("data", (chunk: Buffer) => controller.enqueue(chunk));
+      downloadStream.on("data", (chunk: Buffer | string) => controller.enqueue(chunk));
       downloadStream.on("end", () => controller.close());
       downloadStream.on("error", (error: Error) => controller.error(error));
     },

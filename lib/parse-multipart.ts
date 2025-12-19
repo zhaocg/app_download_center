@@ -34,7 +34,13 @@ export async function parseMultipart(
 
     bb.on("file", (name, file, info) => {
       const { filename, mimeType } = info;
-      const tmpPath = path.join(os.tmpdir(), `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      // Use project root's tmp directory instead of os.tmpdir() to avoid C drive usage
+      // and ensure cross-device link issues are minimized if project is on same drive as destination
+      const projectTmpDir = path.join(process.cwd(), "tmp");
+      if (!fs.existsSync(projectTmpDir)) {
+        fs.mkdirSync(projectTmpDir, { recursive: true });
+      }
+      const tmpPath = path.join(projectTmpDir, `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`);
       
       const writeStream = fs.createWriteStream(tmpPath);
       
