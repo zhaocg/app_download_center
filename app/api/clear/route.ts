@@ -34,12 +34,15 @@ interface ClearResponseBody {
   dirs?: string[];
 }
 
-const EMPTY_DIR_THRESHOLD_MS = 5 * 60 * 1000;
+const EMPTY_DIR_THRESHOLD_MS = 1000;
 
-async function cleanupEmptyDirs(filePath: string) {
-  let dir = path.dirname(path.resolve(filePath));
+async function cleanupEmptyParentDirs(startDir: string) {
+  let dir = path.resolve(startDir);
   const root = path.resolve(DOWNLOAD_ROOT);
-  const thresholdMs = EMPTY_DIR_THRESHOLD_MS;
+  
+  // 在递归清理父目录时，不应用时间阈值。
+  // 因为如果子目录被删除了，父目录的 mtime 会更新为当前时间。
+  // 如果应用阈值，刚刚变空的父目录将无法被删除。
   while (dir.startsWith(root)) {
     if (dir === root) {
       break;
@@ -49,17 +52,18 @@ async function cleanupEmptyDirs(filePath: string) {
       if (entries.length > 0) {
         break;
       }
-      const stats = await fs.stat(dir);
-      const age = Date.now() - stats.mtimeMs;
-      if (age < thresholdMs) {
-        break;
-      }
+      // 不检查 mtime，直接删除空目录
       await fs.rmdir(dir);
       dir = path.dirname(dir);
     } catch (err) {
       break;
     }
   }
+}
+
+async function cleanupEmptyDirs(filePath: string) {
+  const startDir = path.dirname(path.resolve(filePath));
+  await cleanupEmptyParentDirs(startDir);
 }
 
 async function findEmptyDirs(rootDir: string): Promise<string[]> {
@@ -174,6 +178,8 @@ export async function POST(req: NextRequest) {
           await fs.rmdir(resolved);
           deleted += 1;
           deletedDirs.push(resolved);
+          const parent = path.dirname(resolved);
+          await cleanupEmptyParentDirs(parent);
         } catch {
         }
       }

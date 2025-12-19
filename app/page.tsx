@@ -393,7 +393,7 @@ export default function HomePage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 align-middle text-xs text-slate-300">
+                      <td className="px-3 py-2 align-middle text-xs text-slate-700">
                         {(file.size / (1024 * 1024)).toFixed(2)} MB
                       </td>
                       <td className="px-3 py-2 align-middle">
@@ -401,7 +401,7 @@ export default function HomePage() {
                           <button
                             type="button"
                             onClick={() => handleDownload(file)}
-                            className="rounded bg-slate-100 px-2 py-1 text-[10px] text-slate-800 hover:bg-slate-200"
+                            className="rounded bg-slate-500 px-2 py-1 text-[10px] text-white hover:bg-slate-800"
                           >
                             下载
                           </button>
