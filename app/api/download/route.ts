@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server";
 import fs from "node:fs/promises";
+import { createReadStream } from "node:fs";
 import path from "node:path";
 import { ObjectId } from "mongodb";
 import { DOWNLOAD_ROOT } from "../../../lib/config";
 import { getFilesCollection } from "../../../lib/db";
+import { ReadableOptions } from "stream";
 
 function detectContentType(fileName: string): string {
   const lower = fileName.toLowerCase();
@@ -14,6 +16,22 @@ function detectContentType(fileName: string): string {
     return "application/octet-stream";
   }
   return "application/octet-stream";
+}
+
+// Helper to convert Node.js ReadStream to Web ReadableStream
+function streamFile(path: string): ReadableStream {
+  const downloadStream = createReadStream(path);
+  
+  return new ReadableStream({
+    start(controller) {
+      downloadStream.on("data", (chunk: Buffer) => controller.enqueue(chunk));
+      downloadStream.on("end", () => controller.close());
+      downloadStream.on("error", (error: Error) => controller.error(error));
+    },
+    cancel() {
+      downloadStream.destroy();
+    },
+  });
 }
 
 export async function GET(req: NextRequest) {
@@ -40,13 +58,13 @@ export async function GET(req: NextRequest) {
       return new Response("文件不存在", { status: 404 });
     }
 
-    const data = await fs.readFile(filePath);
+    const stream = streamFile(filePath);
 
     const contentType = detectContentType(doc.fileName);
     const encodedFileName = encodeURIComponent(doc.fileName);
     const contentDisposition = `attachment; filename*=UTF-8''${encodedFileName}`;
 
-    return new Response(data, {
+    return new Response(stream, {
       status: 200,
       headers: {
         "Content-Type": contentType,
