@@ -321,18 +321,16 @@ export default function HomePage() {
             <thead className="bg-slate-100">
               <tr>
                 <th className="px-3 py-2 font-medium">名称</th>
-                <th className="px-3 py-2 font-medium">
-                  {isFileLevel ? "项目" : "类型"}
-                </th>
-                <th className="px-3 py-2 font-medium">
-                  {isFileLevel ? "版本" : "数量"}
-                </th>
-                <th className="px-3 py-2 font-medium">
-                  {isFileLevel ? "渠道" : "最后上传时间"}
-                </th>
-                <th className="px-3 py-2 font-medium">
-                  {isFileLevel ? "大小" : ""}
-                </th>
+                {!isFileLevel && (
+                  <th className="px-3 py-2 font-medium">类型</th>
+                )}
+                {!isFileLevel && (
+                  <th className="px-3 py-2 font-medium">数量</th>
+                )}
+                <th className="px-3 py-2 font-medium">最后上传时间</th>
+                {isFileLevel && (
+                  <th className="px-3 py-2 font-medium">大小</th>
+                )}
                 {isFileLevel && (
                   <th className="px-3 py-2 font-medium">操作</th>
                 )}
@@ -342,7 +340,7 @@ export default function HomePage() {
               {entries.length === 0 && (
                 <tr>
                   <td
-                    colSpan={isFileLevel ? 6 : 4}
+                    colSpan={isFileLevel ? 4 : 4}
                     className="px-3 py-6 text-center text-slate-500"
                   >
                     {loading ? "加载中..." : "暂无数据"}
@@ -356,42 +354,59 @@ export default function HomePage() {
                   return (
                     <tr key={file._id || idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 align-middle">
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-1">
                           <span className="break-all text-xs font-medium">
                             {file.fileName}
                           </span>
-                          <span className="text-[10px] text-slate-500">
-                            {file.resVersion &&
-                              `资源版本: ${file.resVersion} `}
-                            {file.areaName && `大区: ${file.areaName} `}
-                            {file.branch && `分支: ${file.branch} `}
-                            {file.rbranch &&
-                              `资源分支: ${file.rbranch} `}
-                            {file.sdk && `SDK: ${file.sdk} `}
-                            {file.harden && "已加固 "}
-                            {file.codeSignType &&
-                              `签名: ${file.codeSignType} `}
-                            {file.appId && `AppId: ${file.appId}`}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                            <span className="rounded bg-slate-50 px-1.5 py-0.5 text-slate-600 border border-slate-200">
+                              {file.channel}
+                            </span>
+                            {file.resVersion && (
+                              <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-600 border border-blue-100">
+                                资源: {file.resVersion}
+                              </span>
+                            )}
+                            {file.areaName && (
+                              <span className="rounded bg-orange-50 px-1.5 py-0.5 text-orange-600 border border-orange-100">
+                                大区: {file.areaName}
+                              </span>
+                            )}
+                            {file.branch && (
+                              <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600 border border-purple-100">
+                                分支: {file.branch}
+                              </span>
+                            )}
+                            {file.rbranch && (
+                              <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600 border border-purple-100">
+                                资源分支: {file.rbranch}
+                              </span>
+                            )}
+                            {file.sdk && (
+                              <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-cyan-600 border border-cyan-100">
+                                SDK: {file.sdk}
+                              </span>
+                            )}
+                            {file.harden && (
+                              <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-600 border border-emerald-100">
+                                已加固
+                              </span>
+                            )}
+                            {file.codeSignType && (
+                              <span className="rounded bg-gray-50 px-1.5 py-0.5 text-gray-600 border border-gray-100">
+                                签名: {file.codeSignType}
+                              </span>
+                            )}
+                            {file.appId && (
+                              <span className="rounded bg-gray-50 px-1.5 py-0.5 text-gray-500 border border-gray-100 font-mono">
+                                {file.appId}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-3 py-2 align-middle text-xs text-slate-700">
-                        {file.projectName}
-                      </td>
-                      <td className="px-3 py-2 align-middle text-xs text-slate-700">
-                        {file.version}
-                      </td>
-                      <td className="px-3 py-2 align-middle text-xs text-slate-700">
-                        <div className="flex flex-col">
-                          <span>
-                            {new Date(
-                              file.uploadedAt
-                            ).toLocaleString()}
-                          </span>
-                          <span className="text-[10px] text-slate-500">
-                            渠道: {file.channel}
-                          </span>
-                        </div>
+                        {new Date(file.uploadedAt).toLocaleString()}
                       </td>
                       <td className="px-3 py-2 align-middle text-xs text-slate-700">
                         {(file.size / (1024 * 1024)).toFixed(2)} MB

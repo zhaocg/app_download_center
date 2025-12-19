@@ -28,7 +28,7 @@ export default function ClearPage() {
   const [projectName, setProjectName] = useState("");
   const [version, setVersion] = useState("");
   const [before, setBefore] = useState("");
-  const [dateMode, setDateMode] = useState<DateMode>("fixed");
+  const [dateMode, setDateMode] = useState<DateMode>("daysBefore");
   const [daysBefore, setDaysBefore] = useState("");
   const [dryRun, setDryRun] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -195,7 +195,7 @@ export default function ClearPage() {
               <option value="time">按时间清理</option>
               <option value="project">按项目清理</option>
               <option value="projectVersion">按项目+版本清理</option>
-              <option value="emptyDirs">清空所有空文件夹</option>
+              <option value="emptyDirs">清空所有空文件夹和无效记录</option>
             </select>
           </div>
           {(mode === "project" || mode === "projectVersion") && (
@@ -249,22 +249,10 @@ export default function ClearPage() {
           )}
           {mode !== "emptyDirs" && (
             <div className="flex flex-col gap-1 md:col-span-2">
-              <label className="text-slate-300">
+              <label className="text-slate-800">
                 上传时间条件{mode !== "time" ? "（可选）" : ""}
               </label>
               <div className="flex flex-col gap-2 md:flex-row">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="dateModeFixed"
-                    type="radio"
-                    checked={dateMode === "fixed"}
-                    onChange={() => setDateMode("fixed")}
-                    className="h-3 w-3"
-                  />
-                  <label htmlFor="dateModeFixed" className="text-slate-300">
-                    指定具体时间
-                  </label>
-                </div>
                 <div className="flex items-center gap-2">
                   <input
                     id="dateModeDays"
@@ -273,8 +261,20 @@ export default function ClearPage() {
                     onChange={() => setDateMode("daysBefore")}
                     className="h-3 w-3"
                   />
-                  <label htmlFor="dateModeDays" className="text-slate-300">
+                  <label htmlFor="dateModeDays" className="text-slate-700">
                     删除 N 天之前的记录
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="dateModeFixed"
+                    type="radio"
+                    checked={dateMode === "fixed"}
+                    onChange={() => setDateMode("fixed")}
+                    className="h-3 w-3"
+                  />
+                  <label htmlFor="dateModeFixed" className="text-slate-700">
+                    指定具体时间
                   </label>
                 </div>
               </div>

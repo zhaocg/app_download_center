@@ -47,6 +47,10 @@ async function cleanupEmptyParentDirs(startDir: string) {
     if (dir === root) {
       break;
     }
+    // 防止删除 root 本身或跳出 root
+    if (!dir.startsWith(root) || dir === root) {
+      break;
+    }
     try {
       const entries = await fs.readdir(dir);
       if (entries.length > 0) {
@@ -116,6 +120,53 @@ async function findEmptyDirs(rootDir: string): Promise<string[]> {
   return result;
 }
 
+async function findInvalidRecords() {
+  const filesCol = await getFilesCollection();
+  // 查找所有记录，检查对应文件是否存在
+  const docs = (await filesCol
+    .find({})
+    .project({
+      _id: 1,
+      relativePath: 1,
+      projectName: 1,
+      version: 1,
+      channel: 1,
+      fileName: 1,
+      uploadedAt: 1
+    })
+    .toArray()) as (Pick<
+    FileMeta,
+    "relativePath" | "projectName" | "version" | "channel" | "fileName" | "uploadedAt"
+  > & { _id: ObjectId })[];
+
+  const invalidDocs: (FileMeta & { _id: ObjectId })[] = [];
+  const chunkSize = 50;
+
+  for (let i = 0; i < docs.length; i += chunkSize) {
+    const chunk = docs.slice(i, i + chunkSize);
+    await Promise.all(
+      chunk.map(async (doc) => {
+        if (!doc.relativePath) {
+          invalidDocs.push(doc as any);
+          return;
+        }
+        const filePath = path.join(DOWNLOAD_ROOT, doc.relativePath);
+        try {
+          const stats = await fs.stat(filePath);
+          if (!stats.isFile()) {
+            invalidDocs.push(doc as any);
+          }
+        } catch (err) {
+          // ENOENT 或其他错误都视为文件无法访问，建议清理
+          invalidDocs.push(doc as any);
+        }
+      })
+    );
+  }
+
+  return invalidDocs;
+}
+
 export async function POST(req: NextRequest) {
   let body: ClearRequestBody;
   try {
@@ -138,8 +189,13 @@ export async function POST(req: NextRequest) {
 
   if (mode === "emptyDirs") {
     const root = DOWNLOAD_ROOT;
+    
+    // 1. 查找空目录
     const dirs = await findEmptyDirs(root);
-    if (!dirs.length) {
+    // 2. 查找无效数据库记录
+    const invalidDocs = await findInvalidRecords();
+
+    if (!dirs.length && !invalidDocs.length) {
       const emptyResult: ClearResponseBody = {
         ok: true,
         matched: 0,
@@ -152,13 +208,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (!dryRun) {
+      // 执行清理无效记录
+      if (invalidDocs.length > 0) {
+        const filesCol = await getFilesCollection();
+        const invalidIds = invalidDocs.map((d) => d._id);
+        await filesCol.deleteMany({ _id: { $in: invalidIds } });
+      }
+
+      // 执行清理空目录
       const rootResolved = path.resolve(root);
       const sorted = dirs.slice().sort((a, b) => {
         const da = a.split(path.sep).length;
         const db = b.split(path.sep).length;
         return db - da;
       });
-      let deleted = 0;
+      let deletedDirsCount = 0;
       const deletedDirs: string[] = [];
       for (const dir of sorted) {
         const resolved = path.resolve(dir);
@@ -176,19 +240,29 @@ export async function POST(req: NextRequest) {
             continue;
           }
           await fs.rmdir(resolved);
-          deleted += 1;
+          deletedDirsCount += 1;
           deletedDirs.push(resolved);
+          
+          // 递归清理父级空目录
           const parent = path.dirname(resolved);
           await cleanupEmptyParentDirs(parent);
         } catch {
         }
       }
+
       const result: ClearResponseBody = {
         ok: true,
-        matched: dirs.length,
-        deleted,
+        matched: dirs.length + invalidDocs.length,
+        deleted: deletedDirsCount + invalidDocs.length,
         totalSize: 0,
-        sample: [],
+        sample: invalidDocs.slice(0, 20).map((d) => ({
+          id: String(d._id),
+          projectName: d.projectName,
+          version: d.version,
+          channel: d.channel,
+          fileName: d.fileName,
+          uploadedAt: d.uploadedAt
+        })),
         dirs: deletedDirs
       };
       return Response.json(result);
@@ -196,10 +270,17 @@ export async function POST(req: NextRequest) {
 
     const dryResult: ClearResponseBody = {
       ok: true,
-      matched: dirs.length,
+      matched: dirs.length + invalidDocs.length,
       deleted: 0,
       totalSize: 0,
-      sample: [],
+      sample: invalidDocs.slice(0, 20).map((d) => ({
+        id: String(d._id),
+        projectName: d.projectName,
+        version: d.version,
+        channel: d.channel,
+        fileName: d.fileName,
+        uploadedAt: d.uploadedAt
+      })),
       dirs
     };
     return Response.json(dryResult);

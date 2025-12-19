@@ -29,6 +29,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 资源列表
               </Link>
               <Link
+                href="/history"
+                className="rounded border border-slate-300 bg-white px-3 py-1 text-slate-700 hover:bg-slate-100"
+              >
+                上传历史
+              </Link>
+              <Link
                 href="/upload"
                 className="rounded bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-500"
               >

@@ -298,10 +298,127 @@ export default function UploadPage() {
               disabled={uploading}
               className="w-full rounded bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
             >
-              {uploading ? "上传中..." : "开始上传"}
+              {uploading ? "正在上传..." : "上传"}
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          API 接入文档
+        </h2>
+        <div className="prose prose-sm prose-slate max-w-none text-xs">
+          <p>
+            本平台支持通过 API 自动化上传安装包，适用于 CI/CD 流程集成。
+          </p>
+          
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            接口地址
+          </h3>
+          <div className="mt-2 rounded bg-slate-100 p-2 font-mono text-slate-600">
+            POST /api/upload
+          </div>
+
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            请求方式
+          </h3>
+          <p className="mt-1">
+            multipart/form-data
+          </p>
+
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            必需参数
+          </h3>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li><code className="bg-slate-100 px-1 rounded">file</code>: 安装包文件（.apk 或 .ipa）</li>
+            <li><code className="bg-slate-100 px-1 rounded">projectName</code>: 项目名称</li>
+            <li><code className="bg-slate-100 px-1 rounded">version</code>: 版本号（如 1.0.0）</li>
+            <li><code className="bg-slate-100 px-1 rounded">buildNumber</code>: 构建号（如 100）</li>
+            <li><code className="bg-slate-100 px-1 rounded">channel</code>: 渠道名称（如 GooglePlay）</li>
+          </ul>
+
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            可选参数
+          </h3>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li><code className="bg-slate-100 px-1 rounded">resVersion</code>: 资源版本</li>
+            <li><code className="bg-slate-100 px-1 rounded">areaName</code>: 大区名称</li>
+            <li><code className="bg-slate-100 px-1 rounded">branch</code>: 代码分支</li>
+            <li><code className="bg-slate-100 px-1 rounded">rbranch</code>: 资源分支</li>
+            <li><code className="bg-slate-100 px-1 rounded">sdk</code>: SDK 类型</li>
+            <li><code className="bg-slate-100 px-1 rounded">harden</code>: 是否加固（true/false/1/0）</li>
+            <li><code className="bg-slate-100 px-1 rounded">codeSignType</code>: 签名类型</li>
+            <li><code className="bg-slate-100 px-1 rounded">appId</code>: App Bundle ID（iOS 安装必需）</li>
+          </ul>
+
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            cURL 示例
+          </h3>
+          <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-50">
+{`curl -X POST \\
+  -F "file=@/path/to/game.apk" \\
+  -F "projectName=MyGame" \\
+  -F "version=1.0.0" \\
+  -F "buildNumber=101" \\
+  -F "channel=Official" \\
+  https://appcenter.xyplay.cn/v2/api/upload`}
+          </pre>
+
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            TypeScript (Node.js) 示例
+          </h3>
+          <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-50">
+{`import FormData from 'form-data';
+import fs from 'fs';
+import fetch from 'node-fetch';
+
+async function uploadApp() {
+  const form = new FormData();
+  form.append('file', fs.createReadStream('./game.apk'));
+  form.append('projectName', 'MyGame');
+  form.append('version', '1.0.0');
+  form.append('buildNumber', '101');
+  form.append('channel', 'Official');
+
+  const response = await fetch('https://appcenter.xyplay.cn/v2/api/upload', {
+    method: 'POST',
+    body: form,
+    headers: form.getHeaders(),
+  });
+
+  const result = await response.json();
+  console.log(result);
+}
+
+uploadApp();`}
+          </pre>
+
+          <h3 className="mt-4 text-xs font-semibold text-slate-800">
+            Python 示例
+          </h3>
+          <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-50">
+{`import requests
+
+def upload_app():
+    url = 'https://appcenter.xyplay.cn/v2/api/upload'
+    files = {
+        'file': open('./game.apk', 'rb')
+    }
+    data = {
+        'projectName': 'MyGame',
+        'version': '1.0.0',
+        'buildNumber': '101',
+        'channel': 'Official'
+    }
+
+    response = requests.post(url, files=files, data=data)
+    print(response.json())
+
+if __name__ == '__main__':
+    upload_app()`}
+          </pre>
+        </div>
       </div>
     </div>
   );
