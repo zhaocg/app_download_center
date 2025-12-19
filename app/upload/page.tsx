@@ -366,25 +366,28 @@ export default function UploadPage() {
           </pre>
 
           <h3 className="mt-4 text-xs font-semibold text-slate-800">
-            TypeScript (Node.js) 示例
+            TypeScript (Node.js 18+) 示例
           </h3>
           <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-50">
-{`import FormData from 'form-data';
-import fs from 'fs';
-import fetch from 'node-fetch';
+{`import fs from 'node:fs';
 
 async function uploadApp() {
-  const form = new FormData();
-  form.append('file', fs.createReadStream('./game.apk'));
-  form.append('projectName', 'MyGame');
-  form.append('version', '1.0.0');
-  form.append('buildNumber', '101');
-  form.append('channel', 'Official');
+  const formData = new FormData();
+  
+  // 使用 fs.readFileSync 读取文件并转为 Blob
+  // Node.js 20+ 也可以使用 openAsBlob
+  const fileBuffer = fs.readFileSync('./game.apk');
+  const blob = new Blob([fileBuffer]);
+  
+  formData.append('file', blob, 'game.apk');
+  formData.append('projectName', 'MyGame');
+  formData.append('version', '1.0.0');
+  formData.append('buildNumber', '101');
+  formData.append('channel', 'Official');
 
   const response = await fetch('https://appcenter.xyplay.cn/v2/api/upload', {
     method: 'POST',
-    body: form,
-    headers: form.getHeaders(),
+    body: formData,
   });
 
   const result = await response.json();
