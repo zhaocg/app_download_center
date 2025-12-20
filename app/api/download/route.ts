@@ -7,6 +7,10 @@ import { DOWNLOAD_ROOT } from "../../../lib/config";
 import { getFilesCollection } from "../../../lib/db";
 import { ReadableOptions } from "stream";
 
+export const dynamic = "force-dynamic";
+
+// Next.js 13+ App Router, Route Handlers do not use `res` object.
+
 function detectContentType(fileName: string): string {
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".apk")) {

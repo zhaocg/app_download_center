@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { ObjectId } from "mongodb";
 import { getFilesCollection } from "../../../../lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const id = searchParams.get("id");

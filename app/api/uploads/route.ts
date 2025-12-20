@@ -3,6 +3,8 @@ import { ObjectId } from "mongodb";
 import { getFilesCollection } from "../../../lib/db";
 import { FileMeta } from "../../../types/file";
 
+export const dynamic = "force-dynamic";
+
 interface UploadItem extends FileMeta {
   _id: string;
 }

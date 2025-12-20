@@ -3,6 +3,8 @@ import { ObjectId } from "mongodb";
 import { getFilesCollection } from "../../../lib/db";
 import { FileMeta, SortField, SortOrder } from "../../../types/file";
 
+export const dynamic = "force-dynamic";
+
 type Level = "project" | "version" | "channel" | "file";
 
 type BrowseEntry =
