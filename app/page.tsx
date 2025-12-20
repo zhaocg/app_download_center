@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FileMeta, SortField, SortOrder } from "../types/file";
-import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon } from "./components/Icons";
+import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon, DefaultAppIcon } from "./components/Icons";
 import { QRCodeIcon, QRCodeModal } from "./components/QRCode";
 
 type Level = "project" | "version" | "channel" | "file";
@@ -50,6 +50,7 @@ export default function HomePage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [message, setMessage] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [iconErrors, setIconErrors] = useState<Record<string, boolean>>({});
 
   const breadcrumb = useMemo(() => {
     const items: { label: string; onClick?: () => void }[] = [];
@@ -382,54 +383,67 @@ export default function HomePage() {
                   return (
                     <tr key={file._id || idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 align-middle">
-                        <div className="flex flex-col gap-1">
-                          <span className="break-all text-xs font-medium">
-                            {file.fileName}
-                          </span>
-                          <div className="flex flex-wrap items-center gap-2 text-[10px]">
-                            <span className="rounded bg-slate-50 px-1.5 py-0.5 text-slate-600 border border-slate-200">
-                              {file.channel}
+                        <div className="flex items-start gap-2">
+                          {file._id && !iconErrors[file._id] ? (
+                            <img
+                              src={`/api/icon?id=${file._id}`}
+                              alt="App Icon"
+                              className="h-8 w-8 rounded-md object-cover shadow-sm bg-slate-100 flex-shrink-0"
+                              onError={() => setIconErrors(prev => ({ ...prev, [file._id]: true }))}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <DefaultAppIcon className="h-8 w-8 rounded-md text-slate-400 bg-slate-100 p-1.5 flex-shrink-0" />
+                          )}
+                          <div className="flex flex-col gap-1 flex-1">
+                            <span className="break-all text-xs font-medium">
+                              {file.fileName}
                             </span>
-                            {file.resVersion && (
-                              <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-600 border border-blue-100">
-                                资源: {file.resVersion}
+                            <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                              <span className="rounded bg-slate-50 px-1.5 py-0.5 text-slate-600 border border-slate-200">
+                                {file.channel}
                               </span>
-                            )}
-                            {file.areaName && (
-                              <span className="rounded bg-orange-50 px-1.5 py-0.5 text-orange-600 border border-orange-100">
-                                大区: {file.areaName}
-                              </span>
-                            )}
-                            {file.branch && (
-                              <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600 border border-purple-100">
-                                分支: {file.branch}
-                              </span>
-                            )}
-                            {file.rbranch && (
-                              <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600 border border-purple-100">
-                                资源分支: {file.rbranch}
-                              </span>
-                            )}
-                            {file.sdk && (
-                              <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-cyan-600 border border-cyan-100">
-                                SDK: {file.sdk}
-                              </span>
-                            )}
-                            {file.harden && (
-                              <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-600 border border-emerald-100">
-                                已加固
-                              </span>
-                            )}
-                            {file.codeSignType && (
-                              <span className="rounded bg-gray-50 px-1.5 py-0.5 text-gray-600 border border-gray-100">
-                                签名: {file.codeSignType}
-                              </span>
-                            )}
-                            {file.appId && (
-                              <span className="rounded bg-gray-50 px-1.5 py-0.5 text-gray-500 border border-gray-100 font-mono">
-                                {file.appId}
-                              </span>
-                            )}
+                              {file.resVersion && (
+                                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-600 border border-blue-100">
+                                  资源: {file.resVersion}
+                                </span>
+                              )}
+                              {file.areaName && (
+                                <span className="rounded bg-orange-50 px-1.5 py-0.5 text-orange-600 border border-orange-100">
+                                  大区: {file.areaName}
+                                </span>
+                              )}
+                              {file.branch && (
+                                <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600 border border-purple-100">
+                                  分支: {file.branch}
+                                </span>
+                              )}
+                              {file.rbranch && (
+                                <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600 border border-purple-100">
+                                  资源分支: {file.rbranch}
+                                </span>
+                              )}
+                              {file.sdk && (
+                                <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-cyan-600 border border-cyan-100">
+                                  SDK: {file.sdk}
+                                </span>
+                              )}
+                              {file.harden && (
+                                <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-600 border border-emerald-100">
+                                  已加固
+                                </span>
+                              )}
+                              {file.codeSignType && (
+                                <span className="rounded bg-gray-50 px-1.5 py-0.5 text-gray-600 border border-gray-100">
+                                  签名: {file.codeSignType}
+                                </span>
+                              )}
+                              {file.appId && (
+                                <span className="rounded bg-gray-50 px-1.5 py-0.5 text-gray-500 border border-gray-100 font-mono">
+                                  {file.appId}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>

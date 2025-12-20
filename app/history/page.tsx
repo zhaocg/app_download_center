@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import type { FileMeta } from "../../types/file";
 
-import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon } from "../components/Icons";
+import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon, DefaultAppIcon } from "../components/Icons";
+import { QRCodeIcon, QRCodeModal } from "../components/QRCode";
 
 interface UploadItem extends FileMeta {
   _id: string;
@@ -22,6 +23,8 @@ export default function HistoryPage() {
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [projectName, setProjectName] = useState("");
   const [limit, setLimit] = useState(50);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [iconErrors, setIconErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -176,8 +179,33 @@ export default function HistoryPage() {
     }
   }
 
+  function handleQRCode(file: UploadItem) {
+    if (!file._id) {
+      return;
+    }
+    const origin = window.location.origin;
+    let url = "";
+    
+    if (file.platform === "ios") {
+      // For iOS, generate ITMS link for direct install
+      const manifestUrl = `${origin}/api/ios/manifest?id=${file._id}`;
+      url = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestUrl)}`;
+    } else {
+      // For Android/Other, direct download link
+      url = `${origin}/api/download?id=${file._id}`;
+    }
+    
+    setQrCodeUrl(url);
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <QRCodeModal 
+        url={qrCodeUrl || ""} 
+        isOpen={!!qrCodeUrl} 
+        onClose={() => setQrCodeUrl(null)} 
+        title="扫码安装/下载"
+      />
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">
           上传历史
@@ -257,15 +285,6 @@ export default function HistoryPage() {
                   项目
                 </th>
                 <th className="px-3 py-2 text-left font-medium text-slate-700">
-                  版本
-                </th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">
-                  渠道
-                </th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">
-                  平台
-                </th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">
                   文件名
                 </th>
                 <th className="px-3 py-2 text-right font-medium text-slate-700">
@@ -280,7 +299,7 @@ export default function HistoryPage() {
               {items.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={5}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     {loading ? "正在加载..." : "暂无上传记录"}
@@ -298,21 +317,21 @@ export default function HistoryPage() {
                     <td className="px-3 py-2 align-middle text-xs text-slate-700 whitespace-nowrap">
                       {item.projectName}
                     </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-700 whitespace-nowrap">
-                      {item.version}
-                    </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-700 whitespace-nowrap">
-                      {item.channel}
-                    </td>
-                    <td className="px-3 py-2 align-middle text-xs text-slate-700 whitespace-nowrap">
-                      {item.platform === "android"
-                        ? "Android"
-                        : item.platform === "ios"
-                        ? "iOS"
-                        : item.platform}
-                    </td>
                     <td className="px-3 py-2 align-middle text-xs text-slate-700">
-                      {item.fileName}
+                      <div className="flex items-center gap-2">
+                        {item._id && !iconErrors[item._id] ? (
+                          <img
+                            src={`/api/icon?id=${item._id}`}
+                            alt="App Icon"
+                            className="h-8 w-8 rounded-md object-cover shadow-sm bg-slate-100 flex-shrink-0"
+                            onError={() => setIconErrors(prev => ({ ...prev, [item._id]: true }))}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <DefaultAppIcon className="h-8 w-8 rounded-md text-slate-400 bg-slate-100 p-1.5 flex-shrink-0" />
+                        )}
+                        <span>{item.fileName}</span>
+                      </div>
                     </td>
                     <td className="px-3 py-2 align-middle text-right text-xs text-slate-700 whitespace-nowrap">
                       {(item.size / (1024 * 1024)).toFixed(2)} MB
@@ -342,6 +361,14 @@ export default function HistoryPage() {
                           className="rounded p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
                         >
                           <ShareIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQRCode(item)}
+                          title="二维码"
+                          className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                        >
+                          <QRCodeIcon className="h-4 w-4" />
                         </button>
                         <button
                           type="button"

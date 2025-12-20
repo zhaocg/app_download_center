@@ -24,5 +24,6 @@ export interface FileMeta {
   codeSignType?: string;
   appId?: string;
   shareId?: string;
+  icon?: string; // Base64 encoded icon or path to icon
 }
 

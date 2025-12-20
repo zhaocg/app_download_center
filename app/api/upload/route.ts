@@ -6,6 +6,7 @@ import { DOWNLOAD_ROOT } from "../../../lib/config";
 import { getFilesCollection } from "../../../lib/db";
 import { FileMeta, Platform } from "../../../types/file";
 import { parseMultipart } from "../../../lib/parse-multipart";
+import { sendDingTalkNotification } from "../../../lib/notification";
 
 function detectPlatform(fileName: string): Platform | null {
   const lower = fileName.toLowerCase();
@@ -150,6 +151,12 @@ export async function POST(req: NextRequest) {
       const result = await filesCol.insertOne(doc as unknown as any);
       resultId = (result.insertedId as ObjectId).toString();
     }
+
+    // Send DingTalk notification
+    // Don't await this to avoid delaying the response
+    sendDingTalkNotification({ ...doc, _id: resultId }).catch(err => {
+      console.error("Async notification error:", err);
+    });
 
     return Response.json({
       ok: true,
