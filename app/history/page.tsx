@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import type { FileMeta } from "../../types/file";
 
-import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon, DefaultAppIcon } from "../components/Icons";
+import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon, DefaultAppIcon, AndroidIcon, AppleIcon } from "../components/Icons";
 import { QRCodeIcon, QRCodeModal } from "../components/QRCode";
+import { useToast } from "../components/Toast";
 
 interface UploadItem extends FileMeta {
   _id: string;
@@ -17,7 +18,7 @@ interface UploadsResponse {
 export default function HistoryPage() {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const toast = useToast();
   const [projects, setProjects] = useState<string[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [projectsError, setProjectsError] = useState<string | null>(null);
@@ -62,7 +63,6 @@ export default function HistoryPage() {
     const controller = new AbortController();
     async function loadHistory() {
       setLoading(true);
-      setMessage(null);
       try {
         const params = new URLSearchParams();
         params.set("limit", String(limit));
@@ -81,7 +81,7 @@ export default function HistoryPage() {
         if (err instanceof Error && err.name === "AbortError") {
           return;
         }
-        setMessage(
+        toast.error(
           err instanceof Error ? err.message : "加载上传历史失败，请稍后重试"
         );
       } finally {
@@ -117,9 +117,9 @@ export default function HistoryPage() {
           (e) => e._id !== file._id
         )
       );
-      setMessage("删除成功");
+      toast.success("删除成功");
     } catch (err) {
-      setMessage(
+      toast.error(
         err instanceof Error ? err.message : "删除失败，请稍后重试"
       );
     }
@@ -143,12 +143,12 @@ export default function HistoryPage() {
       const data: { url: string } = await res.json();
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(data.url);
-        setMessage("分享链接已复制到剪贴板");
+        toast.success("分享链接已复制到剪贴板");
       } else {
-        setMessage(`分享链接: ${data.url}`);
+        toast.info(`分享链接: ${data.url}`, 5000);
       }
     } catch (err) {
-      setMessage(
+      toast.error(
         err instanceof Error ? err.message : "生成分享链接失败"
       );
     }
@@ -265,11 +265,6 @@ export default function HistoryPage() {
           </div>
         </div>
       </div>
-      {message && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {message}
-        </div>
-      )}
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">
           上传记录
@@ -283,6 +278,9 @@ export default function HistoryPage() {
                 </th>
                 <th className="px-3 py-2 text-left font-medium text-slate-700">
                   项目
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700">
+                  平台
                 </th>
                 <th className="px-3 py-2 text-left font-medium text-slate-700">
                   文件名
@@ -299,7 +297,7 @@ export default function HistoryPage() {
               {items.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-3 py-6 text-center text-xs text-slate-500"
                   >
                     {loading ? "正在加载..." : "暂无上传记录"}
@@ -317,6 +315,21 @@ export default function HistoryPage() {
                     <td className="px-3 py-2 align-middle text-xs text-slate-700 whitespace-nowrap">
                       {item.projectName}
                     </td>
+                    <td className="px-3 py-2 align-middle text-xs whitespace-nowrap">
+                      {item.platform === "android" ? (
+                        <span className="rounded bg-emerald-100 px-2 py-1 font-medium text-emerald-700">
+                          Android
+                        </span>
+                      ) : item.platform === "ios" ? (
+                        <span className="rounded bg-slate-100 px-2 py-1 font-medium text-slate-700">
+                          iOS
+                        </span>
+                      ) : (
+                        <span className="rounded bg-gray-100 px-2 py-1 font-medium text-gray-700">
+                          {item.platform}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-3 py-2 align-middle text-xs text-slate-700">
                       <div className="flex items-center gap-2">
                         {item._id && !iconErrors[item._id] ? (
@@ -327,6 +340,10 @@ export default function HistoryPage() {
                             onError={() => setIconErrors(prev => ({ ...prev, [item._id]: true }))}
                             loading="lazy"
                           />
+                        ) : item.fileName.toLowerCase().endsWith(".apk") ? (
+                          <AndroidIcon className="h-8 w-8 rounded-md text-emerald-500 bg-emerald-50 p-1.5 flex-shrink-0" />
+                        ) : item.fileName.toLowerCase().endsWith(".ipa") ? (
+                          <AppleIcon className="h-8 w-8 rounded-md text-slate-600 bg-slate-100 p-1.5 flex-shrink-0" />
                         ) : (
                           <DefaultAppIcon className="h-8 w-8 rounded-md text-slate-400 bg-slate-100 p-1.5 flex-shrink-0" />
                         )}

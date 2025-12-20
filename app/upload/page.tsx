@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "../components/Toast";
 
 interface UploadState {
   projectName: string;
@@ -37,12 +38,12 @@ const defaultUploadState: UploadState = {
 export default function UploadPage() {
   const [upload, setUpload] = useState<UploadState>(defaultUploadState);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const toast = useToast();
 
   async function handleUploadSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!upload.file) {
-      setMessage("请先选择要上传的文件");
+      toast.error("请先选择要上传的文件");
       return;
     }
     if (
@@ -51,7 +52,7 @@ export default function UploadPage() {
       !upload.buildNumber ||
       !upload.channel
     ) {
-      setMessage("请填写完整的必填项目信息");
+      toast.error("请填写完整的必填项目信息");
       return;
     }
     setUploading(true);
@@ -77,10 +78,10 @@ export default function UploadPage() {
       if (!res.ok) {
         throw new Error(await res.text());
       }
-      setMessage("上传成功");
+      toast.success("上传成功");
       setUpload(defaultUploadState);
     } catch (err) {
-      setMessage(
+      toast.error(
         err instanceof Error ? err.message : "上传失败，请稍后重试"
       );
     } finally {
@@ -90,11 +91,6 @@ export default function UploadPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {message && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {message}
-        </div>
-      )}
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">
           上传新的安装包
@@ -366,56 +362,70 @@ export default function UploadPage() {
           </pre>
 
           <h3 className="mt-4 text-xs font-semibold text-slate-800">
-            TypeScript (Node.js 18+) 示例
+            TypeScript (Node.js) 示例
           </h3>
+          <p className="mt-1 text-slate-600">
+            推荐使用 <code className="bg-slate-100 px-1 rounded">axios</code> 配合 <code className="bg-slate-100 px-1 rounded">form-data</code> 库进行流式上传，它能自动处理复杂的网络环境（如代理、SSL）。
+          </p>
           <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-50">
-{`import fs from 'node:fs';
+{`import axios from 'axios';
+import FormData from 'form-data';
+import fs from 'node:fs';
 
 async function uploadApp() {
   const formData = new FormData();
-  
-  // 使用 fs.readFileSync 读取文件并转为 Blob
-  // Node.js 20+ 也可以使用 openAsBlob
-  const fileBuffer = fs.readFileSync('./game.apk');
-  const blob = new Blob([fileBuffer]);
-  
-  formData.append('file', blob, 'game.apk');
+  // 使用 createReadStream 流式上传
+  formData.append('file', fs.createReadStream('./game.apk'));
   formData.append('projectName', 'MyGame');
   formData.append('version', '1.0.0');
   formData.append('buildNumber', '101');
   formData.append('channel', 'Official');
 
-  const response = await fetch('https://appcenter.xyplay.cn/v2/api/upload', {
-    method: 'POST',
-    body: formData,
-  });
-
-  const result = await response.json();
-  console.log(result);
+  try {
+    const response = await axios.post('https://appcenter.xyplay.cn/v2/api/upload', formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+      // 设置最大内容长度为 Infinity 以支持大文件
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 uploadApp();`}
           </pre>
 
           <h3 className="mt-4 text-xs font-semibold text-slate-800">
-            Python 示例
+            Python (Requests) 示例
           </h3>
+          <p className="mt-1 text-slate-600">
+            Python 的 <code className="bg-slate-100 px-1 rounded">requests</code> 库默认支持流式上传。
+          </p>
           <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-50">
 {`import requests
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 def upload_app():
     url = 'https://appcenter.xyplay.cn/v2/api/upload'
-    files = {
-        'file': open('./game.apk', 'rb')
-    }
-    data = {
-        'projectName': 'MyGame',
-        'version': '1.0.0',
-        'buildNumber': '101',
-        'channel': 'Official'
-    }
+    
+    # 使用 MultipartEncoder 可以更好地处理大文件流式上传，避免一次性加载到内存
+    # pip install requests-toolbelt
+    
+    m = MultipartEncoder(
+        fields={
+            'projectName': 'MyGame',
+            'version': '1.0.0',
+            'buildNumber': '101',
+            'channel': 'Official',
+            'file': ('game.apk', open('./game.apk', 'rb'), 'application/vnd.android.package-archive')
+        }
+    )
 
-    response = requests.post(url, files=files, data=data)
+    response = requests.post(url, data=m, headers={'Content-Type': m.content_type})
     print(response.json())
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+"use client";
+
 import { QRCodeSVG } from "qrcode.react";
 
 export function QRCodeIcon({ className }: { className?: string }) {
@@ -21,6 +23,14 @@ export function QRCodeIcon({ className }: { className?: string }) {
         d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"
       />
     </svg>
+  );
+}
+
+export function QRCodeView({ url, size = 128 }: { url: string; size?: number }) {
+  return (
+    <div className="rounded-lg bg-white p-2 shadow-sm border border-slate-100 inline-block">
+      <QRCodeSVG value={url} size={size} level="M" includeMargin={false} />
+    </div>
   );
 }
 

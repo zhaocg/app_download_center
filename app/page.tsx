@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FileMeta, SortField, SortOrder } from "../types/file";
-import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon, DefaultAppIcon } from "./components/Icons";
+import { DownloadIcon, InstallIcon, ShareIcon, TrashIcon, DefaultAppIcon, AndroidIcon, AppleIcon } from "./components/Icons";
 import { QRCodeIcon, QRCodeModal } from "./components/QRCode";
+import { useToast } from "./components/Toast";
 
 type Level = "project" | "version" | "channel" | "file";
 
@@ -48,9 +49,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState<SortField>("uploadedAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-  const [message, setMessage] = useState<string | null>(null);
+  const toast = useToast();
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [iconErrors, setIconErrors] = useState<Record<string, boolean>>({});
+  const [filterText, setFilterText] = useState("");
 
   const breadcrumb = useMemo(() => {
     const items: { label: string; onClick?: () => void }[] = [];
@@ -126,7 +128,7 @@ export default function HomePage() {
         if (err instanceof Error && err.name === "AbortError") {
           return;
         }
-        setMessage(
+        toast.error(
           err instanceof Error ? err.message : "加载失败，请稍后重试"
         );
       } finally {
@@ -185,9 +187,9 @@ export default function HomePage() {
           (e) => e.type !== "file" || e.file._id !== file._id
         )
       );
-      setMessage("删除成功");
+      toast.success("删除成功");
     } catch (err) {
-      setMessage(
+      toast.error(
         err instanceof Error ? err.message : "删除失败，请稍后重试"
       );
     }
@@ -211,12 +213,12 @@ export default function HomePage() {
       const data: { url: string } = await res.json();
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(data.url);
-        setMessage("分享链接已复制到剪贴板");
+        toast.success("分享链接已复制到剪贴板");
       } else {
-        setMessage(`分享链接: ${data.url}`);
+        toast.info(`分享链接: ${data.url}`, 5000);
       }
     } catch (err) {
-      setMessage(
+      toast.error(
         err instanceof Error ? err.message : "生成分享链接失败"
       );
     }
@@ -268,6 +270,29 @@ export default function HomePage() {
 
   const isFileLevel = level === "file";
 
+  const filteredEntries = useMemo(() => {
+    if (!filterText) return entries;
+    const lower = filterText.toLowerCase();
+    return entries.filter((entry) => {
+      if (entry.type === "file") {
+        const file = entry.file;
+        return (
+          file.fileName.toLowerCase().includes(lower) ||
+          (file.channel && file.channel.toLowerCase().includes(lower)) ||
+          (file.resVersion && file.resVersion.toLowerCase().includes(lower)) ||
+          (file.areaName && file.areaName.toLowerCase().includes(lower)) ||
+          (file.branch && file.branch.toLowerCase().includes(lower)) ||
+          (file.rbranch && file.rbranch.toLowerCase().includes(lower)) ||
+          (file.sdk && file.sdk.toLowerCase().includes(lower)) ||
+          (file.codeSignType && file.codeSignType.toLowerCase().includes(lower)) ||
+          (file.appId && file.appId.toLowerCase().includes(lower)) ||
+          (file.harden && lower.includes("加固"))
+        );
+      }
+      return entry.name.toLowerCase().includes(lower);
+    });
+  }, [entries, filterText]);
+
   return (
     <div className="flex flex-col gap-4">
       <QRCodeModal 
@@ -276,11 +301,6 @@ export default function HomePage() {
         onClose={() => setQrCodeUrl(null)} 
         title="扫码安装/下载"
       />
-      {message && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {message}
-        </div>
-      )}
       <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700">
@@ -303,7 +323,15 @@ export default function HomePage() {
             ))}
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-700">
-            <span>排序:</span>
+            <span>筛选:</span>
+            <input
+              type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              placeholder="输入名称过滤..."
+              className="w-32 rounded border border-slate-300 bg-white px-1.5 py-1 text-xs placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+            />
+            <span className="ml-2">排序:</span>
             <select
               value={sortField}
               onChange={(e) =>
@@ -366,17 +394,17 @@ export default function HomePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {entries.length === 0 && (
+              {filteredEntries.length === 0 && (
                 <tr>
                   <td
                     colSpan={isFileLevel ? 4 : 4}
                     className="px-3 py-6 text-center text-slate-500"
                   >
-                    {loading ? "加载中..." : "暂无数据"}
+                    {loading ? "加载中..." : filterText ? "未找到匹配项" : "暂无数据"}
                   </td>
                 </tr>
               )}
-              {entries.map((entry, idx) => {
+              {filteredEntries.map((entry, idx) => {
                 if (entry.type === "file") {
                   if (!isFileLevel) return null;
                   const file = entry.file;
@@ -392,6 +420,10 @@ export default function HomePage() {
                               onError={() => setIconErrors(prev => ({ ...prev, [file._id]: true }))}
                               loading="lazy"
                             />
+                          ) : file.fileName.toLowerCase().endsWith(".apk") ? (
+                            <AndroidIcon className="h-8 w-8 rounded-md text-emerald-500 bg-emerald-50 p-1.5 flex-shrink-0" />
+                          ) : file.fileName.toLowerCase().endsWith(".ipa") ? (
+                            <AppleIcon className="h-8 w-8 rounded-md text-slate-600 bg-slate-100 p-1.5 flex-shrink-0" />
                           ) : (
                             <DefaultAppIcon className="h-8 w-8 rounded-md text-slate-400 bg-slate-100 p-1.5 flex-shrink-0" />
                           )}

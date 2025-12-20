@@ -68,22 +68,12 @@ export async function GET(req: NextRequest) {
         });
     }
     
-    // No icon found in file, return default
-    return new Response(DEFAULT_ICON, {
-        headers: {
-            "Content-Type": "image/svg+xml",
-            "Cache-Control": "public, max-age=31536000",
-        },
-    });
+    // No icon found in file, return 404 to let frontend handle fallback
+    return new Response(null, { status: 404 });
 
   } catch (error) {
     console.error("Icon extraction failed:", error);
-    // Return default icon on error
-    return new Response(DEFAULT_ICON, {
-        headers: {
-            "Content-Type": "image/svg+xml",
-            "Cache-Control": "public, max-age=31536000",
-        },
-    });
+    // Return 404 on error to let frontend handle fallback
+    return new Response(null, { status: 404 });
   }
 }

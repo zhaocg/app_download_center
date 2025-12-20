@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "../components/Toast";
 
 type ClearMode = "time" | "project" | "projectVersion" | "emptyDirs";
 type DateMode = "fixed" | "daysBefore";
@@ -32,7 +33,7 @@ export default function ClearPage() {
   const [daysBefore, setDaysBefore] = useState("");
   const [dryRun, setDryRun] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const toast = useToast();
   const [result, setResult] = useState<ClearResult | null>(null);
   const [projects, setProjects] = useState<string[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -72,25 +73,24 @@ export default function ClearPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
     setResult(null);
 
     if (mode === "time") {
       if (dateMode === "fixed" && !before && !daysBefore) {
-        setMessage("按时间清理时需要选择时间或填写天数");
+        toast.error("按时间清理时需要选择时间或填写天数");
         return;
       }
       if (dateMode === "daysBefore" && !daysBefore) {
-        setMessage("请填写要删除的天数");
+        toast.error("请填写要删除的天数");
         return;
       }
     }
     if (mode === "project" && !projectName) {
-      setMessage("按项目清理时需要填写项目名称");
+      toast.error("按项目清理时需要填写项目名称");
       return;
     }
     if (mode === "projectVersion" && (!projectName || !version)) {
-      setMessage("按项目+版本清理时需要填写项目名称和版本号");
+      toast.error("按项目+版本清理时需要填写项目名称和版本号");
       return;
     }
 
@@ -140,24 +140,26 @@ export default function ClearPage() {
       const data = (await res.json()) as ClearResult;
       setResult(data);
       if (dryRun) {
-        setMessage(
+        toast.info(
           `预览完成，匹配到 ${data.matched} 条记录，预计可释放 ${(
             data.totalSize /
             (1024 * 1024)
-          ).toFixed(2)} MB 空间，未实际删除任何数据`
+          ).toFixed(2)} MB 空间，未实际删除任何数据`,
+          5000
         );
       } else {
-        setMessage(
+        toast.success(
           `清理完成，匹配到 ${data.matched} 条记录，实际删除 ${
             data.deleted
           } 条，释放空间约 ${(
             data.totalSize /
             (1024 * 1024)
-          ).toFixed(2)} MB`
+          ).toFixed(2)} MB`,
+          5000
         );
       }
     } catch (err) {
-      setMessage(
+      toast.error(
         err instanceof Error ? err.message : "清理失败，请稍后重试"
       );
     } finally {
@@ -172,11 +174,6 @@ export default function ClearPage() {
         <p>此页面不会出现在导航中，只能通过手动输入地址访问。</p>
         <p>建议先勾选预览模式确认无误后，再关闭预览执行实际删除。</p>
       </div>
-      {message && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {message}
-        </div>
-      )}
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">
           清理条件

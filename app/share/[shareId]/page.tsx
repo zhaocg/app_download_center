@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { ObjectId } from "mongodb";
 import { getFilesCollection } from "../../../lib/db";
+import { QRCodeView } from "../../components/QRCode";
 
 interface SharePageProps {
   params: {
@@ -25,6 +26,13 @@ export default async function SharePage({ params }: SharePageProps) {
   const manifestUrl = `${origin}/api/ios/manifest?id=${id}`;
   const isAndroid = doc.platform === "android";
   const isIos = doc.platform === "ios";
+  
+  let qrCodeUrl = downloadUrl;
+  if (isIos) {
+    qrCodeUrl = `itms-services://?action=download-manifest&url=${encodeURIComponent(
+      manifestUrl
+    )}`;
+  }
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
@@ -134,6 +142,12 @@ export default async function SharePage({ params }: SharePageProps) {
               </p>
             </>
           )}
+          <div className="mt-2 flex flex-col items-center gap-2 border-t border-slate-100 pt-4">
+            <QRCodeView url={qrCodeUrl} size={140} />
+            <p className="text-[10px] text-slate-400">
+              扫码直接下载/安装
+            </p>
+          </div>
         </div>
       </div>
     </div>
