@@ -8,9 +8,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # 如果你的 MongoDB 运行在宿主机上（通过 Docker 映射端口或直接安装），可以使用 host.docker.internal
       # 如果你的 MongoDB 是另一个容器且在同一个 Docker 网络中，请使用该容器的名称
-      - MONGODB_URI=mongodb://host.docker.internal:27017/app-download-center
+      - MONGODB_URI=mongodb://mongodb:27017/app-download-center
       - DOWNLOAD_ROOT=/app/data
       - NODE_ENV=production
     # 下面的配置允许在 Linux Docker 环境中使用 host.docker.internal 访问宿主机
