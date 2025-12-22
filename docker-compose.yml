@@ -1,25 +1,22 @@
 version: '3'
 
 services:
-  mongodb:
-    image: mongo:7
-    container_name: mongodb
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+#   mongodb:
+#     image: mongo:7
+#     container_name: mongodb
+#     restart: always
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo_data:/data/db
   app-download-center:
     build: .
+    env_file:
+        - .env
     container_name: app-download-center
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      # 如果你的 MongoDB 是另一个容器且在同一个 Docker 网络中，请使用该容器的名称
-      - MONGODB_URI=mongodb://mongodb:27017/app-download-center
-      - DOWNLOAD_ROOT=/app/data
-      - NODE_ENV=production
     # 下面的配置允许在 Linux Docker 环境中使用 host.docker.internal 访问宿主机
     extra_hosts:
       - "host.docker.internal:host-gateway"
